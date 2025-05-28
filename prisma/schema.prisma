@@ -1,0 +1,73 @@
+// Prisma schema for truck wash app
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  passwordHash String
+  fullName    String
+  role        UserRole
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  trucks      Truck[]   @relation("DriverTrucks")
+  washes      WashRecord[] @relation("WasherWashes")
+}
+
+enum UserRole {
+  manager
+  driver
+  washer
+}
+
+model Truck {
+  id           Int       @id @default(autoincrement())
+  licensePlate String    @unique
+  driver       User?     @relation("DriverTrucks", fields: [driverId], references: [id])
+  driverId     Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  washes       WashRecord[]
+}
+
+model WashRecord {
+  id         Int         @id @default(autoincrement())
+  truck      Truck       @relation(fields: [truckId], references: [id])
+  truckId    Int
+  washer    User        @relation("WasherWashes", fields: [washerId], references: [id])
+  washerId   Int
+  washType   WashType
+  price      Decimal @db.Decimal(10,2)
+  washDate   DateTime    @default(now())
+  notes      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  images     WashImage[]
+}
+
+enum WashType {
+  basic
+  premium
+  deluxe
+}
+
+model WashImage {
+  id           Int       @id @default(autoincrement())
+  washRecord   WashRecord @relation(fields: [washRecordId], references: [id])
+  washRecordId Int
+  imageKey     String
+  imageType    ImageType
+  createdAt    DateTime  @default(now())
+}
+
+enum ImageType {
+  before
+  after
+}
