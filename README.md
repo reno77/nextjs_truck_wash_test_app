@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+This project was developed entirely using Visual Studio Code with GitHub Copilot Chat in agent mode, showcasing the power of AI-assisted development.
+
 ## Getting Started
 
 First, run the development server:
@@ -34,3 +36,34 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/your_database_name"
+
+# NextAuth Configuration
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-here"
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID="your-aws-access-key"
+AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
+AWS_REGION="your-aws-region"
+S3_BUCKET_NAME="your-bucket-name"
+```
+
+Make sure to replace the placeholder values with your actual configuration:
+
+- `DATABASE_URL`: Your PostgreSQL connection string
+- `NEXTAUTH_URL`: The base URL of your application (use your production URL in production)
+- `NEXTAUTH_SECRET`: A secret key for NextAuth.js (you can generate one using `openssl rand -base64 32`)
+- `AWS_ACCESS_KEY_ID`: Your AWS access key for S3 access
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key for S3 access
+- `AWS_REGION`: The AWS region where your S3 bucket is located (e.g., "us-east-1")
+- `S3_BUCKET_NAME`: The name of your S3 bucket for storing images
+
+**Note**: Never commit the `.env` file to version control. Make sure it's included in your `.gitignore` file.
