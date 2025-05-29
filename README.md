@@ -67,3 +67,40 @@ Make sure to replace the placeholder values with your actual configuration:
 - `S3_BUCKET_NAME`: The name of your S3 bucket for storing images
 
 **Note**: Never commit the `.env` file to version control. Make sure it's included in your `.gitignore` file.
+
+## Running Tests
+
+The project includes a comprehensive test suite using Jest and React Testing Library. To run the tests:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (recommended during development)
+npm test -- --watch
+
+# Run tests with coverage report
+npm test -- --coverage
+```
+
+### Test Structure
+
+The tests are organized in the `src/__tests__` directory:
+
+- `api/`: Tests for API routes
+  - `auth.test.ts`: Authentication endpoints
+  - `cleanup.test.ts`: S3 cleanup functionality
+  - `upload.test.ts`: File upload endpoints
+  - `users.test.ts`: User management
+  - `washes.test.ts`: Wash records management
+- `helpers/`: Test utilities and mock data
+
+### Test Environment
+
+The test suite uses:
+- Jest as the test runner
+- `@testing-library/react` for React component testing
+- `jest-mock-extended` for Prisma client mocking
+- Mocked AWS S3 client for testing file operations
+
+A `.env.test` file is automatically used during testing, so your development database won't be affected by test runs.
