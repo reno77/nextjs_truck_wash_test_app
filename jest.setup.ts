@@ -45,7 +45,7 @@ const mockResponse = {
 jest.mock('next/server', () => ({
   __esModule: true,
   NextResponse: mockResponse,
-  NextRequest: mockRequest,
+  NextRequest: jest.fn(),
   userAgent: jest.fn()
 }));
 
