@@ -112,7 +112,7 @@ describe('Upload API', () => {
       expect(response.status).toBe(500);
       
       // Reset the mock
-      mockGetSignedUrl.mockImplementation((client, command) => {
+      mockGetSignedUrl.mockImplementation((_client: any, command: { constructor: { name: string; }; input: { Bucket: any; Key: any; }; Bucket: any; Key: any; }) => {
         const type = command?.constructor?.name || 'Command';
         const bucket = command?.input?.Bucket || command?.Bucket || 'test-bucket';
         const key = command?.input?.Key || command?.Key || 'test-key';
