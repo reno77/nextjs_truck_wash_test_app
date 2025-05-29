@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 
@@ -18,7 +18,7 @@ export default async function DriverDashboard() {
   // Get trucks associated with this driver
   const trucks = await prisma.truck.findMany({
     where: {
-      driverId: parseInt((session.user as any).id)
+      driverId: (session.user as any).id
     },
     select: {
       id: true

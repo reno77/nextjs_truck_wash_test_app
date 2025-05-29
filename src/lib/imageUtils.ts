@@ -67,7 +67,7 @@ export async function validateAndCompressImage(
       isValid: true,
       compressedFile: file
     };
-  } catch (error) {
+  } catch {
     return {
       isValid: false,
       error: 'Error processing image'

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     // Validate driver exists
     const driver = await prisma.user.findUnique({
-      where: { id: parseInt(driverId), role: 'driver' },
+      where: { id: driverId, role: 'driver' },
     });
 
     if (!driver) {
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       },
       washer: {
         connect: {
-          id: parseInt((session.user as any).id),
+          id: (session.user as any).id,
         },
       },
       washType: washType as WashType,
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
 
     const washRecords = await prisma.washRecord.findMany({
       where: {
-        washerId: parseInt((session.user as any).id),
+        washerId: (session.user as any).id,
       },
       include: {
         truck: {

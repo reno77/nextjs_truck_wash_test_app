@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { getImageUrl } from '@/lib/s3';
@@ -13,7 +13,7 @@ export default async function WashesPage() {
 
   const washes = await prisma.washRecord.findMany({
     where: {
-      washerId: parseInt((session.user as any).id),
+      washerId: (session.user as any).id,
     },
     include: {
       truck: {

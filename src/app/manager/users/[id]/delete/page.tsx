@@ -2,12 +2,13 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 
-export default async function DeleteUserPage({ params }: { params: { id: string } }) {
+export default async function DeleteUserPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession();
   if (!session || !(session.user as any).role || (session.user as any).role !== 'manager') {
     redirect('/login');
   }
-  const user = await prisma.user.findUnique({ where: { id: Number(params.id) } });
+  const user = await prisma.user.findUnique({ where: { id: id } });
   if (!user) return <div className="p-8">User not found</div>;
 
   return (

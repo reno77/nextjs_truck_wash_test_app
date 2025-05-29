@@ -1,33 +1,67 @@
-import { NextAuthOptions } from 'next-auth';
 import { createMockContext, mockContext } from '../helpers/testUtils';
 import { JWT } from 'next-auth/jwt';
 import { Session } from 'next-auth';
 import { UserRole } from '@prisma/client';
-import bcryptjs from 'bcryptjs';
 
-jest.mock('bcryptjs');
-
-const mockCredentialsProvider = {
-  id: 'credentials',
-  name: 'Credentials',
-  credentials: {
-    email: { label: 'Email', type: 'text' },
-    password: { label: 'Password', type: 'password' }
-  },
-  authorize: jest.fn()
+const mockGoogleProvider = {
+  id: 'google',
+  name: 'Google',
+  type: 'oauth',
+  clientId: 'mock-google-client-id',
+  clientSecret: 'mock-google-client-secret'
 };
 
 const mockCallbacks = {
-  jwt: jest.fn(async ({ token, user }: { token: JWT; user: any }) => {
+  signIn: jest.fn(async ({ user, account }) => {
+    if (account?.provider === 'google') {
+      try {
+        // Check if user already exists
+        const existingUser = await mockContext.prisma.user.findUnique({
+          where: { email: user.email! }
+        });
+
+        if (!existingUser) {
+          // Check if there are any users in the database
+          const userCount = await mockContext.prisma.user.count();
+          
+          // First user gets 'manager' role, subsequent users get 'driver' role
+          const role = userCount === 0 ? 'manager' : 'driver';
+          
+          await mockContext.prisma.user.create({
+            data: {
+              email: user.email!,
+              fullName: user.name || '',
+              role: role,
+              passwordHash: '', // No password for OAuth users
+            }
+          });
+        }
+        return true;
+      } catch (error) {
+        console.error('Error creating user:', error);
+        return false;
+      }
+    }
+    return false;
+  }),
+  jwt: jest.fn(async ({ token, user, trigger }) => {
     if (user) {
       token.role = user.role;
+    } else if (trigger === 'update') {
+      // Refresh user role from database
+      const dbUser = await mockContext.prisma.user.findUnique({
+        where: { id: token.sub! }
+      });
+      if (dbUser) {
+        token.role = dbUser.role;
+      }
     }
     return token;
   }),
   session: jest.fn(async ({ session, token }: { session: Session; token: JWT & { role?: UserRole } }) => {
     if (session.user) {
       session.user.id = token.sub!;
-      session.user.role = token.role ?? '';
+      session.user.role = token.role ?? 'driver';
     }
     return session;
   })
@@ -35,17 +69,15 @@ const mockCallbacks = {
 
 jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
   authOptions: {
-    providers: [mockCredentialsProvider],
-    callbacks: mockCallbacks
+    providers: [mockGoogleProvider],
+    callbacks: mockCallbacks,
+    adapter: {} // Mock adapter
   }
 }));
 
 jest.mock('@/lib/prisma', () => ({
-  prisma: mockContext.prisma,
-}));
-
-jest.mock('bcryptjs', () => ({
-  compare: jest.fn().mockResolvedValue(true),
+  __esModule: true,
+  default: mockContext.prisma,
 }));
 
 describe('NextAuth Configuration', () => {
@@ -53,61 +85,153 @@ describe('NextAuth Configuration', () => {
     jest.clearAllMocks();
   });
 
-  describe('Credentials Provider', () => {
-    it('should authenticate valid credentials', async () => {
+  describe('Google Provider', () => {
+    it('should allow Google sign in', async () => {
+      const mockAccount = {
+        provider: 'google',
+        type: 'oauth',
+        providerAccountId: '12345'
+      };
+
       const mockUser = {
-        id: 1,
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User'
+      };
+
+      // Mock existing user
+      mockContext.prisma.user.findUnique.mockResolvedValue({
+        id: "1",
         email: 'test@example.com',
         fullName: 'Test User',
-        role: UserRole.washer,
-        passwordHash: 'hashedpassword123',
+        role: 'driver',
+        passwordHash: '',
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
-
-      mockContext.prisma.user.findUnique.mockResolvedValue(mockUser);
-      (bcryptjs.compare as jest.Mock).mockResolvedValue(true);
-
-      const credentials = {
-        email: 'test@example.com',
-        password: '123456',
-      };
-
-      mockCredentialsProvider.authorize.mockResolvedValue({
-        id: mockUser.id.toString(),
-        email: mockUser.email,
-        fullName: mockUser.fullName,
-        role: mockUser.role,
       });
 
-      const result = await mockCredentialsProvider.authorize(credentials);
-
-      expect(result).toEqual({
-        id: mockUser.id.toString(),
-        email: mockUser.email,
-        fullName: mockUser.fullName,
-        role: mockUser.role,
+      const result = await mockCallbacks.signIn({
+        user: mockUser,
+        account: mockAccount,
+        profile: {}
       });
-      // Since we're testing a mock authorize function, we can't test the internal bcryptjs call
-      // The actual bcryptjs.compare is tested by the implementation, not the mock
+
+      expect(result).toBe(true);
     });
 
-    it('should reject invalid credentials', async () => {
-      mockContext.prisma.user.findUnique.mockResolvedValue(null);
-      mockCredentialsProvider.authorize.mockRejectedValue(new Error('Invalid credentials'));
-
-      const credentials = {
-        email: 'invalid@example.com',
-        password: 'wrongpassword',
+    it('should create first user with manager role', async () => {
+      const mockAccount = {
+        provider: 'google',
+        type: 'oauth',
+        providerAccountId: '12345'
       };
 
-      await expect(mockCredentialsProvider.authorize(credentials))
-        .rejects.toThrow('Invalid credentials');
+      const mockUser = {
+        id: '1',
+        email: 'first@example.com',
+        name: 'First User'
+      };
+
+      // Mock no existing user
+      mockContext.prisma.user.findUnique.mockResolvedValue(null);
+      // Mock no users in database (first user)
+      mockContext.prisma.user.count.mockResolvedValue(0);
+      mockContext.prisma.user.create.mockResolvedValue({
+        id: "1",
+        email: 'first@example.com',
+        fullName: 'First User',
+        role: 'manager',
+        passwordHash: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await mockCallbacks.signIn({
+        user: mockUser,
+        account: mockAccount,
+        profile: {}
+      });
+
+      expect(result).toBe(true);
+      expect(mockContext.prisma.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'first@example.com',
+          fullName: 'First User',
+          role: 'manager',
+          passwordHash: '',
+        }
+      });
+    });
+
+    it('should create subsequent users with driver role', async () => {
+      const mockAccount = {
+        provider: 'google',
+        type: 'oauth',
+        providerAccountId: '67890'
+      };
+
+      const mockUser = {
+        id: '2',
+        email: 'second@example.com',
+        name: 'Second User'
+      };
+
+      // Mock no existing user
+      mockContext.prisma.user.findUnique.mockResolvedValue(null);
+      // Mock existing users in database (not first user)
+      mockContext.prisma.user.count.mockResolvedValue(1);
+      mockContext.prisma.user.create.mockResolvedValue({
+        id: "2",
+        email: 'second@example.com',
+        fullName: 'Second User',
+        role: 'driver',
+        passwordHash: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await mockCallbacks.signIn({
+        user: mockUser,
+        account: mockAccount,
+        profile: {}
+      });
+
+      expect(result).toBe(true);
+      expect(mockContext.prisma.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'second@example.com',
+          fullName: 'Second User',
+          role: 'driver',
+          passwordHash: '',
+        }
+      });
+    });
+
+    it('should reject non-Google providers', async () => {
+      const mockAccount = {
+        provider: 'github',
+        type: 'oauth',
+        providerAccountId: '12345'
+      };
+
+      const mockUser = {
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User'
+      };
+
+      const result = await mockCallbacks.signIn({
+        user: mockUser,
+        account: mockAccount,
+        profile: {}
+      });
+
+      expect(result).toBe(false);
     });
   });
 
   describe('Callbacks', () => {
-    it('should include role in JWT token', async () => {
+    it('should include role in JWT token from user', async () => {
       const mockToken: JWT = {
         sub: '1',
         email: 'test@example.com',
@@ -132,12 +256,41 @@ describe('NextAuth Configuration', () => {
       }));
     });
 
-    it('should include role in session', async () => {
+    it('should refresh role from database on update', async () => {
+      const mockToken: JWT = {
+        sub: '1',
+        email: 'test@example.com',
+        name: 'Test User',
+      };
+
+      const mockDbUser = {
+        id: "1",
+        email: 'test@example.com',
+        fullName: 'Test User',
+        role: UserRole.manager,
+        passwordHash: 'hashedpassword123', // Required field
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockContext.prisma.user.findUnique.mockResolvedValue(mockDbUser);
+
+      const result = await mockCallbacks.jwt({ 
+        token: mockToken, 
+        user: undefined,
+        trigger: 'update',
+      } as any);
+
+      expect(result).toEqual(expect.objectContaining({
+        role: UserRole.manager,
+      }));
+    });
+
+    it('should include role in session with default driver role', async () => {
       const mockToken: JWT & { role?: UserRole } = {
         sub: '1',
         email: 'test@example.com',
         name: 'Test User',
-        role: UserRole.washer,
       };
 
       const mockSession: Session = {
@@ -145,7 +298,7 @@ describe('NextAuth Configuration', () => {
           id: mockToken.sub!,
           email: mockToken.email!,
           name: mockToken.name!,
-          role: mockToken.role!,
+          role: 'driver', // Add default role
         },
         expires: new Date().toISOString(),
       };
@@ -158,8 +311,37 @@ describe('NextAuth Configuration', () => {
       expect(result.user).toEqual(expect.objectContaining({
         id: mockToken.sub,
         email: mockToken.email,
-        name: mockToken.name,
-        role: mockToken.role,
+        role: 'driver', // Default role when none specified
+      }));
+    });
+
+    it('should include specified role in session', async () => {
+      const mockToken: JWT & { role?: UserRole } = {
+        sub: '1',
+        email: 'test@example.com',
+        name: 'Test User',
+        role: UserRole.washer,
+      };
+
+      const mockSession: Session = {
+        user: {
+          id: mockToken.sub!,
+          email: mockToken.email!,
+          name: mockToken.name!,
+          role: 'driver', // This will be overridden by the callback
+        },
+        expires: new Date().toISOString(),
+      };
+
+      const result = await mockCallbacks.session({
+        session: mockSession,
+        token: mockToken,
+      });
+
+      expect(result.user).toEqual(expect.objectContaining({
+        id: mockToken.sub,
+        email: mockToken.email,
+        role: UserRole.washer,
       }));
     });
   });

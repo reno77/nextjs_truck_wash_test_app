@@ -2,6 +2,9 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 This project was developed entirely using Visual Studio Code with GitHub Copilot Chat in agent mode, showcasing the power of AI-assisted development.
 
+The main branch has a normal login
+The sso branch implements a Google account login
+
 ## Getting Started
 
 First, run the development server:

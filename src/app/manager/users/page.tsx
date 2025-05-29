@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
@@ -19,16 +19,22 @@ export default async function UsersPage() {
   });
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">User Management</h1>
-      <Link href="/manager/users/create" className="mb-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Create User</Link>
+      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+        <p className="text-blue-800">
+          <strong>Note:</strong> Users are automatically registered when they sign in with Google. 
+          New users get the &quot;driver&quot; role by default. Use the actions below to change user roles as needed.
+        </p>
+      </div>
+      
       <table className="min-w-full bg-white border rounded shadow mt-4">
         <thead>
           <tr>
             <th className="px-4 py-2 border">Name</th>
             <th className="px-4 py-2 border">Email</th>
             <th className="px-4 py-2 border">Role</th>
-            <th className="px-4 py-2 border">Created</th>
+            <th className="px-4 py-2 border">Joined</th>
             <th className="px-4 py-2 border">Actions</th>
           </tr>
         </thead>
@@ -37,7 +43,15 @@ export default async function UsersPage() {
             <tr key={user.id}>
               <td className="px-4 py-2 border">{user.fullName}</td>
               <td className="px-4 py-2 border">{user.email}</td>
-              <td className="px-4 py-2 border">{user.role}</td>
+              <td className="px-4 py-2 border">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  user.role === 'manager' ? 'bg-purple-100 text-purple-800' :
+                  user.role === 'washer' ? 'bg-blue-100 text-blue-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {user.role}
+                </span>
+              </td>
               <td className="px-4 py-2 border">{new Date(user.createdAt).toLocaleDateString()}</td>
               <td className="px-4 py-2 border">
                 <Link href={`/manager/users/${user.id}/edit`} className="text-blue-600 hover:underline mr-2">Edit</Link>

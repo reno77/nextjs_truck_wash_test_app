@@ -6,7 +6,7 @@ import { UserRole } from '@prisma/client';
 
 // Import route handlers
 const routeModule = jest.requireActual('@/app/api/users/route');
-const { GET, POST, PUT, DELETE } = routeModule as any;
+const { GET, PUT, DELETE } = routeModule as any;
 
 jest.mock('next-auth', () => ({
   __esModule: true,
@@ -38,7 +38,7 @@ describe('Users API', () => {
       
       const mockUsers = [
         {
-          id: 1,
+          id: '1',
           email: 'user1@example.com',
           passwordHash: 'hashedpassword1',
           fullName: 'User 1',
@@ -47,7 +47,7 @@ describe('Users API', () => {
           updatedAt: new Date('2025-05-29T01:59:54.529Z'),
         },
         {
-          id: 2,
+          id: '2',
           email: 'user2@example.com',
           passwordHash: 'hashedpassword2',
           fullName: 'User 2',
@@ -82,73 +82,12 @@ describe('Users API', () => {
     });
   });
 
-  describe('POST /api/users', () => {
-    it('should create a new user when authenticated as manager', async () => {
-      mockGetServerSession.mockResolvedValue(mockManagerSession);
-      
-      const newUser = {
-        email: 'newuser@example.com',
-        fullName: 'New User',
-        role: 'washer',
-        password: 'password123'
-      };
-
-      mockContext.prisma.user.create.mockResolvedValue({
-        id: 3,
-        email: newUser.email,
-        passwordHash: 'hashedpassword123',
-        fullName: newUser.fullName,
-        role: UserRole.washer,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-
-      const response = await POST(
-        new NextRequest(new URL('http://localhost:3000/api/users'), {
-          method: 'POST',
-          body: JSON.stringify(newUser),
-        })
-      );
-
-      const data = await response.json();
-
-      expect(response.status).toBe(201);
-      expect(data).toMatchObject({
-        user: {
-          id: 3,
-          email: newUser.email,
-          fullName: newUser.fullName,
-          role: UserRole.washer,
-        }
-      });
-    });
-
-    it('should return 400 for invalid user data', async () => {
-      mockGetServerSession.mockResolvedValue(mockManagerSession);
-      
-      const invalidUser = {
-        fullName: 'Invalid User',
-        // missing email, role, and password
-      };
-
-      const response = await POST(
-        new NextRequest(new URL('http://localhost:3000/api/users'), {
-          method: 'POST',
-          body: JSON.stringify(invalidUser),
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
-
-      expect(response.status).toBe(400);
-    });
-  });
-
   describe('PUT /api/users', () => {
     it('should update an existing user when authenticated as manager', async () => {
       mockGetServerSession.mockResolvedValue(mockManagerSession);
       
       const updatedUser = {
-        id: 1,
+        id: '1',
         email: 'updated@example.com',
         passwordHash: 'somehash',
         fullName: 'Updated User',
@@ -189,7 +128,7 @@ describe('Users API', () => {
       
       const userId = '1';
       mockContext.prisma.user.delete.mockResolvedValue({
-        id: Number(userId),
+        id: userId,
         email: 'deleted@example.com',
         passwordHash: '',
         fullName: 'Deleted User',

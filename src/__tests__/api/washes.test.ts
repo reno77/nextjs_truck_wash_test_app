@@ -39,7 +39,7 @@ describe('Washes API', () => {
         { 
           id: 1,
           truckId: 1,
-          washerId: parseInt(mockWasherSession.user.id),
+          washerId: mockWasherSession.user.id,
           washType: WashType.basic,
           price: new Decimal(100.00),
           washDate: new Date(),
@@ -72,7 +72,7 @@ describe('Washes API', () => {
       expect(data.washRecords[0]).toMatchObject({
         id: 1,
         truckId: 1,
-        washerId: 1,
+        washerId: "1",
         washType: 'basic',
         notes: 'Test wash',
         truck: {
@@ -121,7 +121,7 @@ describe('Washes API', () => {
 
       // Mock driver lookup
       mockContext.prisma.user.findUnique.mockResolvedValue({
-        id: 1,
+        id: "1",
         email: 'driver@example.com',
         fullName: 'Test Driver',
         role: 'driver',
@@ -135,7 +135,7 @@ describe('Washes API', () => {
       mockContext.prisma.truck.create.mockResolvedValue({
         id: 1,
         licensePlate: 'TRUCK001',
-        driverId: 1,
+        driverId: "1",
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -143,7 +143,7 @@ describe('Washes API', () => {
       const createdWashRecord = {
         id: 1,
         truckId: 1,
-        washerId: parseInt(mockWasherSession.user.id),
+        washerId: mockWasherSession.user.id,
         washType: WashType.basic,
         price: new Decimal(100.00),
         washDate: new Date(),
@@ -183,7 +183,7 @@ describe('Washes API', () => {
       expect(data.washRecord).toMatchObject({
         id: 1,
         truckId: 1,
-        washerId: 1,
+        washerId: "1",
         washType: 'basic',
         notes: 'Test wash',
         truck: {

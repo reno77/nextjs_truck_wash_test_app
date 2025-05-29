@@ -10,15 +10,65 @@ datasource db {
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(cuid())
   email       String    @unique
-  passwordHash String
+  passwordHash String?  // Make optional for OAuth users
   fullName    String
-  role        UserRole
+  role        UserRole  @default(driver)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   trucks      Truck[]   @relation("DriverTrucks")
   washes      WashRecord[] @relation("WasherWashes")
+
+  // NextAuth fields
+  accounts      Account[]
+  sessions      Session[]
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Truck {
+  id           Int       @id @default(autoincrement())
+  licensePlate String    @unique
+  driver       User?     @relation("DriverTrucks", fields: [driverId], references: [id])
+  driverId     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  washes       WashRecord[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 enum UserRole {
@@ -27,22 +77,12 @@ enum UserRole {
   washer
 }
 
-model Truck {
-  id           Int       @id @default(autoincrement())
-  licensePlate String    @unique
-  driver       User?     @relation("DriverTrucks", fields: [driverId], references: [id])
-  driverId     Int?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  washes       WashRecord[]
-}
-
 model WashRecord {
   id         Int         @id @default(autoincrement())
   truck      Truck       @relation(fields: [truckId], references: [id])
   truckId    Int
   washer    User        @relation("WasherWashes", fields: [washerId], references: [id])
-  washerId   Int
+  washerId   String
   washType   WashType
   price      Decimal @db.Decimal(10,2)
   washDate   DateTime    @default(now())
