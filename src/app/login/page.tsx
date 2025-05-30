@@ -95,7 +95,8 @@ export default function LoginPage() {
         </button>
         
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>New users will be automatically registered with driver privileges.</p>
+          <p>First user signing into the DB will be assigned as a Manager</p>
+          <p>Subsequent users will be automatically registered with driver privileges.</p>
           <p className="mt-1">Contact your manager for role changes.</p>
         </div>
       </div>
