@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// Force TypeScript reload
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -10,7 +12,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const users = await prisma.user.findMany();
+    // Exclude soft-deleted users
+    const users = await prisma.user.findMany({
+      where: {
+        deletedAt: null
+      }
+    });
     return NextResponse.json(users);
   } catch (error) {
     console.error('Error in GET /api/users:', error);
@@ -54,15 +61,25 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
     }
 
-    const user = await prisma.user.delete({
+    // Check if user exists and is not already soft-deleted
+    const existingUser = await prisma.user.findUnique({
+      where: { id: id }
+    });
+
+    if (!existingUser || existingUser.deletedAt) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Soft delete: set deletedAt timestamp instead of actually deleting
+    const user = await prisma.user.update({
       where: { id: id },
+      data: {
+        deletedAt: new Date()
+      }
     });
 
     return NextResponse.json(user);
   } catch (error) {
-    if (error instanceof Error && (error as any).code === 'P2025') {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
     console.error('Error in DELETE /api/users:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

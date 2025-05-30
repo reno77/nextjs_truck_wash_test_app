@@ -63,7 +63,7 @@ describe('Washes API', () => {
 
       mockContext.prisma.washRecord.findMany.mockResolvedValue(mockWashRecords);
 
-      const response = await GET(new NextRequest(new URL('http://localhost:3000/api/washes')));
+      const response = await GET();
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -93,14 +93,14 @@ describe('Washes API', () => {
     it('should return 401 when not authenticated as washer', async () => {
       mockGetServerSession.mockResolvedValue(mockDriverSession);
 
-      const response = await GET(new NextRequest(new URL('http://localhost:3000/api/washes')));
+      const response = await GET();
       expect(response.status).toBe(401);
     });
 
     it('should return 401 when not authenticated', async () => {
       mockGetServerSession.mockResolvedValue(null);
 
-      const response = await GET(new NextRequest(new URL('http://localhost:3000/api/washes')));
+      const response = await GET();
       expect(response.status).toBe(401);
     });
   });
@@ -128,7 +128,7 @@ describe('Washes API', () => {
         passwordHash: 'hash',
         createdAt: new Date(),
         updatedAt: new Date()
-      });
+      } as any);
 
       // Mock truck lookup (not found, so create new)
       mockContext.prisma.truck.findUnique.mockResolvedValue(null);

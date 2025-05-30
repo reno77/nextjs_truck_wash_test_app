@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { validateAndCompressImage, IMAGE_CONFIG } from '@/lib/imageUtils';
 
 interface Driver {
-  id: number;
+  id: string;
   fullName: string;
 }
 
@@ -70,11 +70,36 @@ export default function CreateWashForm({ drivers }: { drivers: Driver[] }) {
       });
 
       if (!presignedRes.ok) {
-        const error = await presignedRes.json();
-        throw new Error(error.error || 'Failed to get upload URL');
+        const errorText = await presignedRes.text();
+        console.error('CreateWashForm - Upload API error response:', errorText);
+        
+        let errorMessage = 'Failed to get upload URL';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorJson.details || errorMessage;
+        } catch (parseError) {
+          console.warn('CreateWashForm - Could not parse error response as JSON:', parseError);
+          // Use the raw error text if JSON parsing fails
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const { uploadUrl, viewUrl, key } = await presignedRes.json();
+      const responseText = await presignedRes.text();
+      console.log('CreateWashForm - Upload API success response:', responseText);
+      
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('CreateWashForm - Failed to parse upload API response:', parseError);
+        console.error('CreateWashForm - Response text:', responseText);
+        console.error('CreateWashForm - Response starts with:', responseText.substring(0, 50));
+        throw new Error('Invalid JSON response from upload API: ' + responseText.substring(0, 100));
+      }
+
+      const { uploadUrl, viewUrl, key } = responseData;
 
       // Upload to S3
       const uploadRes = await fetch(uploadUrl, {
@@ -246,23 +271,29 @@ export default function CreateWashForm({ drivers }: { drivers: Driver[] }) {
               (Max size: {IMAGE_CONFIG.maxSizeMB}MB)
             </span>
           </label>
-          <input
-            type="file"
-            accept={IMAGE_CONFIG.allowedTypes.join(',')}
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                try {
-                  const result = await handleImageUpload(file, 'before');
-                  setBeforeImage(result);
-                } catch (err: any) {
-                  setError(err.message || 'Failed to upload before image');
+          <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg hover:border-gray-400 transition-colors">
+            <input
+              type="file"
+              accept={IMAGE_CONFIG.allowedTypes.join(',')}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImageUpload(file, 'before')
+                    .then(result => {
+                      setBeforeImage(result);
+                      setError('');
+                    })
+                    .catch(err => {
+                      console.error('Upload failed:', err);
+                      setError(err.message || 'Failed to upload before image');
+                    });
                 }
-              }
-            }}
-            required
-            className="w-full border px-3 py-2 rounded"
-          />
+              }}
+              required
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+            />
+            <p className="text-xs text-gray-400 mt-1">Click to select or drag and drop</p>
+          </div>
           {uploadStatus.before && (
             <p className={`mt-1 text-sm ${
               uploadStatus.before.status === 'done' ? 'text-green-600' :
@@ -284,23 +315,29 @@ export default function CreateWashForm({ drivers }: { drivers: Driver[] }) {
               (Max size: {IMAGE_CONFIG.maxSizeMB}MB)
             </span>
           </label>
-          <input
-            type="file"
-            accept={IMAGE_CONFIG.allowedTypes.join(',')}
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                try {
-                  const result = await handleImageUpload(file, 'after');
-                  setAfterImage(result);
-                } catch (err: any) {
-                  setError(err.message || 'Failed to upload after image');
+          <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg hover:border-gray-400 transition-colors">
+            <input
+              type="file"
+              accept={IMAGE_CONFIG.allowedTypes.join(',')}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImageUpload(file, 'after')
+                    .then(result => {
+                      setAfterImage(result);
+                      setError('');
+                    })
+                    .catch(err => {
+                      console.error('Upload failed:', err);
+                      setError(err.message || 'Failed to upload after image');
+                    });
                 }
-              }
-            }}
-            required
-            className="w-full border px-3 py-2 rounded"
-          />
+              }}
+              required
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+            />
+            <p className="text-xs text-gray-400 mt-1">Click to select or drag and drop</p>
+          </div>
           {uploadStatus.after && (
             <p className={`mt-1 text-sm ${
               uploadStatus.after.status === 'done' ? 'text-green-600' :

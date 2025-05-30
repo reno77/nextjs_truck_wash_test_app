@@ -12,7 +12,12 @@ declare module "next-auth" {
       name?: string | null;
       image?: string | null;
       role: string;
+      idToken?: string; // Add id_token for federated logout
     }
+  }
+  
+  interface User {
+    idToken?: string; // Add id_token to User type
   }
 }
 
@@ -46,10 +51,19 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      profile(profile, tokens) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          idToken: tokens.id_token, // Store the id_token for federated logout
+        };
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ account }) {
       // Allow all Google sign-ins - let NextAuth handle user creation
       if (account?.provider === 'google') {
         return true;
@@ -67,6 +81,11 @@ export const authOptions: NextAuthOptions = {
           token.id = String(dbUser.id); // Ensure it's treated as string
           token.role = dbUser.role;
         }
+        
+        // Store the id_token from Google for federated logout
+        if (user.idToken) {
+          token.idToken = user.idToken;
+        }
       }
       return token;
     },
@@ -81,6 +100,11 @@ export const authOptions: NextAuthOptions = {
           session.user.id = String(dbUser.id); // Ensure it's treated as string
           session.user.role = dbUser.role;
         }
+        
+        // Include the id_token in the session for federated logout
+        if (token.idToken) {
+          session.user.idToken = token.idToken as string;
+        }
       }
       return session;
     },
@@ -92,4 +116,61 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Set to false for development
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Set to false for development
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Set to false for development
+      }
+    },
+    pkceCodeVerifier: {
+      name: `next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Set to false for development
+        maxAge: 900, // 15 minutes
+      }
+    },
+    state: {
+      name: `next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Set to false for development
+        maxAge: 900, // 15 minutes
+      }
+    },
+    nonce: {
+      name: `next-auth.nonce`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Set to false for development
+      }
+    }
+  },
 };

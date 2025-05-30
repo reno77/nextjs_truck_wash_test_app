@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Check if AWS CLI is installed
-if ! command -v aws &> /dev/null; then
-    echo "AWS CLI is not installed. Please install it first."
-    exit 1
-fi
+# if ! command -v aws &> /dev/null; then
+#     echo "AWS CLI is not installed. Please install it first."
+#     exit 1
+# fi
 
 # Load environment variables
 if [ -f .env ]; then
@@ -26,7 +26,7 @@ aws s3api put-bucket-cors --bucket $AWS_S3_BUCKET_NAME --cors-configuration '{
         {
             "AllowedHeaders": ["*"],
             "AllowedMethods": ["PUT", "POST", "GET"],
-            "AllowedOrigins": ["http://localhost:3000", "https://*.your-domain.com"],
+            "AllowedOrigins": ["http://127.0.0.1:3000", "http://localhost:3000", "https://*.your-domain.com"],
             "ExposeHeaders": ["ETag"]
         }
     ]

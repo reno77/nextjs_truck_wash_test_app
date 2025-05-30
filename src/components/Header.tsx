@@ -1,8 +1,8 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { federatedLogout } from '@/lib/federatedLogout'
 
 interface HeaderProps {
   user?: {
@@ -84,7 +84,19 @@ export function Header({ user }: HeaderProps) {
                     <p className="text-gray-500 truncate">{user?.email}</p>
                   </div>
                   <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
+                    onClick={async () => {
+                      console.log('Sign out button clicked'); // Debug log
+                      console.log('Starting federatedLogout...');
+                      try {
+                        await federatedLogout();
+                        console.log('federatedLogout completed');
+                      } catch (error) {
+                        console.error('Error in federatedLogout:', error);
+                        // Ultimate fallback: direct redirect
+                        console.log('Attempting direct redirect to login...');
+                        window.location.href = '/login';
+                      }
+                    }}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Sign out

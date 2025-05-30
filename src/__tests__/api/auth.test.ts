@@ -108,7 +108,7 @@ describe('NextAuth Configuration', () => {
         passwordHash: '',
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await mockCallbacks.signIn({
         user: mockUser,
@@ -144,7 +144,7 @@ describe('NextAuth Configuration', () => {
         passwordHash: '',
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await mockCallbacks.signIn({
         user: mockUser,
@@ -188,7 +188,7 @@ describe('NextAuth Configuration', () => {
         passwordHash: '',
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await mockCallbacks.signIn({
         user: mockUser,
@@ -271,7 +271,7 @@ describe('NextAuth Configuration', () => {
         passwordHash: 'hashedpassword123', // Required field
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
+      } as any;
 
       mockContext.prisma.user.findUnique.mockResolvedValue(mockDbUser);
 

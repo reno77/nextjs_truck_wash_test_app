@@ -15,6 +15,7 @@ model User {
   passwordHash String?  // Make optional for OAuth users
   fullName    String
   role        UserRole  @default(driver)
+  deletedAt   DateTime? // Soft delete timestamp
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   trucks      Truck[]   @relation("DriverTrucks")

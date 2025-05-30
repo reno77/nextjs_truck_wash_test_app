@@ -1,0 +1,64 @@
+Debugger listening on ws://127.0.0.1:46641/6841d2e8-82cd-41de-8089-891bf553bb88
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+
+> nextjs_truck_wash_test_app@0.1.0 dev
+> next dev --turbopack
+
+Debugger listening on ws://127.0.0.1:42023/9401a468-c7e5-414a-82e5-4bb4564d5d77
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+Debugger listening on ws://127.0.0.1:42433/45327c79-0400-49dc-9ecd-5d34b76afcf9
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.2 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.0.111:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Compiled middleware in 185ms
+ ✓ Ready in 992ms
+ ○ Compiling /api/upload ...
+ ✓ Compiled /api/upload in 645ms
+Upload API - AWS environment variables check passed
+Upload API - Authentication check passed (debug mode: true )
+Upload API - Parsed body: { fileType: 'image/jpeg', fileSize: 150000, imageType: 'before' }
+Upload API - Generating presigned URL for bucket: sentinl-wash-app-aibuild-demo
+Upload API - S3 key: washes/debug-user/2025-05-30/before/d0b59ae22fee8ab080c8d4b5da3d07a3.jpeg
+Upload API - Presigned URL generated successfully
+Upload API - View URL generated successfully
+ POST /api/upload?debug=true 200 in 972ms
+Upload API - AWS environment variables check passed
+Upload API - Authentication check passed (debug mode: true )
+Upload API - Parsed body: { fileType: 'image/jpeg', fileSize: 150000, imageType: 'before' }
+Upload API - Generating presigned URL for bucket: sentinl-wash-app-aibuild-demo
+Upload API - S3 key: washes/debug-user/2025-05-30/before/8117bc0a682f4de6f7197cb61eec4a43.jpeg
+Upload API - Presigned URL generated successfully
+Upload API - View URL generated successfully
+ POST /api/upload?debug=true 200 in 49ms
+ ✓ Compiled /api/auth/[...nextauth] in 294ms
+Debugger listening on ws://127.0.0.1:39171/02fbbc52-5473-4238-99c7-47abcededcab
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+ GET /api/auth/signin?callbackUrl=%2F%3Fid%3D5abf5cf4-817b-4dd6-85c2-8db87f5671c7%26vscodeBrowserReqId%3D1748611795983 302 in 786ms
+Waiting for the debugger to disconnect...
+ ○ Compiling /login ...
+Debugger listening on ws://127.0.0.1:34859/1d7f568f-8765-4155-a8e9-d15b35811dd4
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+ ✓ Compiled /login in 1363ms
+ GET /login?callbackUrl=http%3A%2F%2F127.0.0.1%3A3000%2F%3Fid%3D5abf5cf4-817b-4dd6-85c2-8db87f5671c7%26vscodeBrowserReqId%3D1748611795983 200 in 1542ms
+ GET /api/auth/session 200 in 41ms
+Debugger listening on ws://127.0.0.1:39373/ecb3e9f5-34d1-43ee-9765-28178d7e6125
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+Waiting for the debugger to disconnect...
+ GET /api/auth/signin?callbackUrl=%2Fwasher%2Fwashes%2Fcreate%3Fid%3D5abf5cf4-817b-4dd6-85c2-8db87f5671c7%26vscodeBrowserReqId%3D1748611888635 302 in 47ms
+Debugger listening on ws://127.0.0.1:44641/e3b30493-5e80-44df-be39-7c7b6b8eb467
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /login?callbackUrl=http%3A%2F%2F127.0.0.1%3A3000%2Fwasher%2Fwashes%2Fcreate%3Fid%3D5abf5cf4-817b-4dd6-85c2-8db87f5671c7%26vscodeBrowserReqId%3D1748611888635 200 in 60ms
+Debugger attached.
+ GET /api/auth/session 200 in 21ms
+Waiting for the debugger to disconnect...
