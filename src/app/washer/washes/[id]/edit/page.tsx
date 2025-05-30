@@ -42,6 +42,12 @@ export default async function EditWashPage({ params }: EditWashPageProps) {
     notFound();
   }
 
+  // Convert Decimal fields to string for serialization
+  const serializableWashRecord = {
+    ...washRecord,
+    price: washRecord.price?.toString(),
+  };
+
   // Fetch all drivers for the form
   const drivers = await prisma.user.findMany({
     where: { role: 'driver' },
@@ -55,7 +61,7 @@ export default async function EditWashPage({ params }: EditWashPageProps) {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Edit Wash Record</h1>
-      <EditWashForm washRecord={washRecord} drivers={drivers} />
+      <EditWashForm washRecord={serializableWashRecord} drivers={drivers} />
     </div>
   );
 }

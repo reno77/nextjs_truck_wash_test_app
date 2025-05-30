@@ -6,7 +6,8 @@ import { WashRecord, Truck, User, WashImage, ImageType } from '@prisma/client';
 import { getImageUrl } from '@/lib/s3-client';
 import { validateAndCompressImage, IMAGE_CONFIG } from '@/lib/imageUtils';
 
-interface WashRecordWithRelations extends WashRecord {
+interface WashRecordWithRelations extends Omit<WashRecord, 'price'> {
+  price: string; // Accept string for client serialization
   truck: Truck & {
     driver: User | null;
   };
